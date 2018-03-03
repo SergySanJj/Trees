@@ -10,16 +10,21 @@ namespace Tree
 	{
 		keyType  key;  // standart type key so we can do operations between them like <,>,==
 		dataType data; // so any type data can be stored
-		searchNode<keyType, dataType> *pLeft = nullptr;  // left sub-tree
-		searchNode<keyType, dataType> *pRight = nullptr; // right sub-tree
-
+		searchNode<keyType, dataType> *pLeft = NULL;  // left sub-tree
+		searchNode<keyType, dataType> *pRight = NULL; // right sub-tree
+		searchNode<keyType, dataType> *pParent = NULL;// parent of current node, if this node is root => pParent must stay NULL
+		char side = 'n';                              // l - is left son, r - is right son, n - is not a son
 		searchNode()
 		{
+			key = keyType();
+			data = dataType();
 		}
 
 		~searchNode()
 		{
-
+			this->pLeft = NULL;
+			this->pRight = NULL;
+			this->pParent = NULL;
 		}
 
 		searchNode(keyType key, dataType data)  // copy constructor
@@ -53,7 +58,7 @@ namespace Tree
 		void clear();                                           // delete all nodes from tree
 	private:
 		//Data//
-		sNode *pRoot = nullptr;
+		sNode *pRoot = NULL;
 
 		//Methods//
 		bool cmp(keyType addKey, sNode *subTree);                                         // 0 == left, 1 == right, subTree is a sub-tree on chosen level
@@ -80,11 +85,12 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::add(keyType addKey, dataType addElement)
 	{
-		if (this->pRoot == nullptr)
+		if (this->pRoot == NULL)
 		{
 			sNode *newElem = new sNode();
 			newElem->data = addElement;
 			newElem->key = addKey;
+			newElem->side = 'n';
 			this->pRoot = newElem;
 			return;
 		}
@@ -102,21 +108,25 @@ namespace Tree
 	{
 		if (cmp(addKey, subTree))
 		{
-			if (subTree->pRight == nullptr)
+			if (subTree->pRight == NULL)
 			{
 				subTree->pRight = new sNode();
 				subTree->pRight->key = addKey;
 				subTree->pRight->data = addElement;
+				subTree->pRight->side = 'r';
+				subTree->pRight->pParent = subTree;
 				return;
 			}
 			recAdd(addKey, addElement, subTree->pRight);
 			return;
 		}
-		if (subTree->pLeft == nullptr)
+		if (subTree->pLeft == NULL)
 		{
 			subTree->pLeft = new sNode();
 			subTree->pLeft->key = addKey;
 			subTree->pLeft->data = addElement;
+			subTree->pLeft->side = 'l';
+			subTree->pLeft->pParent = subTree;
 			return;
 		}
 		recAdd(addKey, addElement, subTree->pLeft);
@@ -125,33 +135,46 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::recDelete(sNode *subTree)
 	{
-		/*if (subTree->pLeft == nullptr && subTree->pRight == nullptr)
-		{
-			delete subTree;
-			return;
-		}
-		if (subTree->pLeft!=nullptr)
-			recDelete(subTree->pLeft);
-		if (subTree->pRight != nullptr)
-			recDelete(subTree->pRight);*/
-		if (subTree != nullptr)
+		if (subTree != NULL)
 		{
 			recDelete(subTree->pLeft);
 			recDelete(subTree->pRight);
+			if (subTree->side == 'l')
+				subTree->pParent->pLeft = NULL;
+			else if (subTree->side == 'r')
+				subTree->pParent->pRight = NULL;
+			else if (subTree->side == 'n')
+			{
+				if (subTree->pLeft != NULL)
+				{
+					this->pRoot = subTree->pLeft;
+				}
+				else if (subTree->pRight != NULL)
+				{
+					this->pRoot = subTree->pRight;
+				}
+				else
+				{
+					this->pRoot = NULL;
+				}
+			}
 			delete subTree;
-			subTree = nullptr;
+			
 		}
 	}
 
 	template <typename keyType, class dataType>
 	bool searchTree<keyType, dataType>::find(keyType searchKey, dataType &resultVariable) // ln(n) travers search using pre-order search
 	{
+		if (this->pRoot == NULL) // stop if empty
+			return 0;
+
 		sNode *pCurNode = this->pRoot;
-		while (searchKey != pCurNode->key && (pCurNode->pLeft != nullptr || pCurNode->pRight != nullptr))
+		while (searchKey != pCurNode->key && (pCurNode->pLeft != NULL || pCurNode->pRight != NULL))
 		{
 			if (searchKey < pCurNode->key)
 			{
-				if (pCurNode->pLeft != nullptr)
+				if (pCurNode->pLeft != NULL)
 				{
 					pCurNode = pCurNode->pLeft;
 					continue;
@@ -161,7 +184,7 @@ namespace Tree
 			}
 			else
 			{
-				if (pCurNode->pRight != nullptr)
+				if (pCurNode->pRight != NULL)
 				{
 					pCurNode = pCurNode->pRight;
 					continue;
@@ -182,12 +205,15 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::del(keyType deleteKey)
 	{
+		if (this->pRoot == NULL) // stop if empty
+			return;
+
 		sNode *pCurNode = this->pRoot;
-		while (deleteKey != pCurNode->key && (pCurNode->pLeft != nullptr || pCurNode->pRight != nullptr))
+		while (deleteKey != pCurNode->key && (pCurNode->pLeft != NULL || pCurNode->pRight != NULL))
 		{
 			if (deleteKey < pCurNode->key)
 			{
-				if (pCurNode->pLeft != nullptr)
+				if (pCurNode->pLeft != NULL)
 				{
 					pCurNode = pCurNode->pLeft;
 					continue;
@@ -197,7 +223,7 @@ namespace Tree
 			}
 			else
 			{
-				if (pCurNode->pRight != nullptr)
+				if (pCurNode->pRight != NULL)
 				{
 					pCurNode = pCurNode->pRight;
 					continue;
@@ -232,7 +258,7 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack)
 	{
-		if (subTree != nullptr)
+		if (subTree != NULL)
 		{
 			traversePostOrder(subTree->pLeft, treeStack);
 			traversePostOrder(subTree->pRight, treeStack);
@@ -245,7 +271,7 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey)
 	{
-		if (subTree != nullptr)
+		if (subTree != NULL)
 		{
 			traversePostOrder(subTree->pLeft, treeStack, deleteKey);
 			traversePostOrder(subTree->pRight, treeStack, deleteKey);
@@ -260,5 +286,56 @@ namespace Tree
 	void searchTree<keyType, dataType>::clear()
 	{
 		recDelete(this->pRoot);
+		this->pRoot = NULL;
 	}
 }
+
+/*
+void Tree::remove(Node *node, Node *parent)//удаление узла
+{
+if (node->rightPtr == 0 && node->leftPtr == 0)//если это лист
+{
+if (parent == 0)//если он единственный в дереве
+root = 0;//дерево пустое
+else if (parent->leftPtr == node)//иначе если родитель есть и наш узел стоит слева от родителя
+parent->leftPtr = 0;//мы его выкидываем
+else
+parent->rightPtr = 0;//если был справа тоже выкидываем
+}
+else if (node->rightPtr == 0)//если наш узел имеет только потомка слева
+{
+if (parent == 0)//если это корень дерева
+root = node->leftPtr;//потомок слева становится корнем
+else if (parent->leftPtr == node)//иначе если наш узел расположен слева у своего родителя
+parent->leftPtr = node->leftPtr;//потомок узла становится на его место
+else
+parent->rightPtr = node->leftPtr;//значит узел находится справа у родителя, удаляем его
+}
+else if (node->leftPtr == 0)//аналогично
+{
+if (parent == 0)
+root = node->rightPtr;
+else if (parent->leftPtr == node)
+parent->leftPtr = node->rightPtr;
+else
+parent->rightPtr = node->rightPtr;
+}
+else //у него есть 2 потомка
+{
+Node *c, *p = node;//2 указателя на удаляемый узел
+for (c = node->rightPtr; c->leftPtr != NULL; c = c->leftPtr) p = c;//ищем в правой ветви крайний левый узел
+if (p != node)
+{
+p->leftPtr = c->rightPtr;
+c->rightPtr = node->rightPtr;
+}
+c->leftPtr = node->leftPtr;
+if (parent == 0)//если это случай, когда узел -это корень
+root = c;//просто крайний левый ставим в корень
+else if (parent->leftPtr == node)//если есть родитель, то теперь родитель указывает слева на крайний левый узел
+parent->leftPtr = c;
+else
+parent->rightPtr = c;//аналогично
+}
+delete node;//до этого расставляли верно указатели, что бы не разрушить структуру дерева, а сейчас удаляем узел.
+*/

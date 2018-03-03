@@ -19,7 +19,7 @@ public:
 	bool sPush(const T);        // add new elem at the end
 	const T sPop();             // return value of last elem and delete it
 	const T sWatch();           // return value of last elem
-	bool watch(T &result);// 0 - not found, 1 - found
+	bool watch(T &result);      // 0 - not found, 1 - found
 private:
 	TNode<T> *pTop = NULL;      // pointer on the top element
 };

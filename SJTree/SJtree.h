@@ -8,12 +8,14 @@ namespace Tree
 	template <typename keyType, class dataType>
 	struct searchNode
 	{
+	public:
 		keyType  key;  // standart type key so we can do operations between them like <,>,==
 		dataType data; // so any type data can be stored
 		searchNode<keyType, dataType> *pLeft = NULL;  // left sub-tree
 		searchNode<keyType, dataType> *pRight = NULL; // right sub-tree
 		searchNode<keyType, dataType> *pParent = NULL;// parent of current node, if this node is root => pParent must stay NULL
 		char side = 'n';                              // l - is left son, r - is right son, n - is not a son
+
 		searchNode()
 		{
 			key = keyType();
@@ -35,8 +37,6 @@ namespace Tree
 
 		searchNode<keyType, dataType> operator = (const searchNode<keyType, dataType> &searchNode2)
 		{
-			
-			//searchNode<keyType, dataType> *newNode = new searchNode<keyType, dataType>();
 			return searchNode<keyType, dataType>(this->key = searchNode2.key, this->data = searchNode2.data);
 		}
 	};
@@ -54,19 +54,24 @@ namespace Tree
 		void add(keyType addKey, dataType addElement);           // interface to add element
 		bool find(keyType searchKey, dataType &resultVariable); // search first element with searchKey key, return 1 and change resultVariable if such element was found,
 																//return 0 and don't change resultVariable if such element doesn't exist
-		void del(keyType deleteKey);                            // delete all elements with deleteKey key
+		void del(keyType deleteKey);                            // delete first element with deleteKey key
 		void clear();                                           // delete all nodes from tree
 	private:
 		//Data//
 		sNode *pRoot = NULL;
 
 		//Methods//
-		bool cmp(keyType addKey, sNode *subTree);                                         // 0 == left, 1 == right, subTree is a sub-tree on chosen level
-		void recAdd(keyType addKey, dataType addElement, sNode *subTree);                 // recursive adding of element to the sub-tree by rule: go left if key<=currentKey, otherwise go right
-		void recDelete(sNode *subTree);                                                   // recursive deletting all inheritor nodes, used as destructor
-		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack);                // traverse tree in post-order and add each node into stack
-		void buildFromStack(SJstack<sNode> nodeStack);                                    // add new row of elements from stack
+		bool cmp(keyType addKey, sNode *subTree);                                             // 0 == left, 1 == right, subTree is a sub-tree on chosen level
+		void recAdd(keyType addKey, dataType addElement, sNode *subTree);                     // recursive adding of element to the sub-tree by rule: go left if key<=currentKey, otherwise go right
+		void recDelete(sNode *subTree);                                                       // recursive deletting all inheritor nodes, used as destructor
+		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack);                    // traverse tree in post-order and add each node into stack
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
+		void buildFromStack(SJstack<sNode> nodeStack);                                        // add new row of elements from stack to the tree
+
+		void delElement(sNode *curNode, keyType deleteKey);									  // delets element with deleteKey could be found frome chosen node
+
+		sNode *leftMost(sNode *curNode);
+		sNode *rightMost(sNode *curNode);
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +164,6 @@ namespace Tree
 				}
 			}
 			delete subTree;
-			
 		}
 	}
 
@@ -208,45 +212,7 @@ namespace Tree
 		if (this->pRoot == NULL) // stop if empty
 			return;
 
-		sNode *pCurNode = this->pRoot;
-		if (this->pRoot->key != deleteKey)
-		{
-			while (deleteKey != pCurNode->key && (pCurNode->pLeft != NULL || pCurNode->pRight != NULL))
-			{
-				if (deleteKey < pCurNode->key)
-				{
-					if (pCurNode->pLeft != NULL)
-					{
-						pCurNode = pCurNode->pLeft;
-						continue;
-					}
-					else
-						return;
-				}
-				else
-				{
-					if (pCurNode->pRight != NULL)
-					{
-						pCurNode = pCurNode->pRight;
-						continue;
-					}
-					else
-						return;
-				}
-			}
-			if (pCurNode->key == deleteKey)
-			{
-				SJstack<sNode> treeStack;
-				traversePostOrder(pCurNode, treeStack, deleteKey);
-
-				recDelete(pCurNode);
-				buildFromStack(treeStack);
-			}
-			else
-				return;
-		}
-		SJstack<sNode> treeStack;
-		
+		delElement(this->pRoot, deleteKey);
 	}
 
 	template <typename keyType, class dataType>
@@ -290,58 +256,69 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::clear()
 	{
-		
 		recDelete(this->pRoot);
 		//this->pRoot = NULL;
 	}
-}
 
-/*
-void Tree::remove(Node *node, Node *parent)//удаление узла
-{
-if (node->rightPtr == 0 && node->leftPtr == 0)//если это лист
-{
-if (parent == 0)//если он единственный в дереве
-root = 0;//дерево пустое
-else if (parent->leftPtr == node)//иначе если родитель есть и наш узел стоит слева от родителя
-parent->leftPtr = 0;//мы его выкидываем
-else
-parent->rightPtr = 0;//если был справа тоже выкидываем
+	template <typename keyType, class dataType>
+	void searchTree<keyType, dataType>::delElement(sNode *curNode, keyType deleteKey)
+	{
+		if (curNode == NULL)
+			return;
+
+		if (deleteKey < curNode->key)
+			return delElement(curNode->pLeft, deleteKey);
+		else if (deleteKey > curNode->key)
+			return delElement(curNode->pRight, deleteKey);
+		else {
+			if (curNode->pLeft == NULL && curNode->pRight == NULL) {
+				if (curNode->pParent->pLeft == curNode)
+					curNode->pParent->pLeft = NULL;
+				else
+					curNode->pParent->pRight = NULL;
+				delete curNode;
+			}
+			else {
+				sNode * newnode = NULL;
+				if (curNode->pLeft != NULL) {
+					newnode = rightMost(curNode->pLeft);
+				}
+				else
+					newnode = leftMost(curNode->pRight);
+
+				if (curNode->pParent->pLeft == curNode)
+					curNode->pParent->pLeft = newnode;
+				else
+					curNode->pParent->pRight = newnode;
+
+				newnode->pParent = curNode->pParent;
+				newnode->pRight = curNode->pRight;
+				newnode->pLeft = curNode->pLeft;
+
+				delete curNode;
+			}
+		}
+	}
+
+	template <typename keyType, class dataType>
+	sNode * searchTree<keyType, dataType>::leftMost(sNode *curNode) 
+	{
+		if (curNode == NULL)
+			return NULL;
+		if (curNode->pLeft != NULL) {
+			return leftMost(curNode->pLeft);
+		}
+		return curNode;
+	}
+
+	template <typename keyType, class dataType>
+	sNode * searchTree<keyType, dataType>::rightMost(sNode *curNode)
+	{
+		if (curNode == NULL)
+			return NULL;
+		if (curNode->pRight != NULL) {
+			return rightMost(curNode->pRight);
+		}
+		return curNode;
+	}
 }
-else if (node->rightPtr == 0)//если наш узел имеет только потомка слева
-{
-if (parent == 0)//если это корень дерева
-root = node->leftPtr;//потомок слева становится корнем
-else if (parent->leftPtr == node)//иначе если наш узел расположен слева у своего родителя
-parent->leftPtr = node->leftPtr;//потомок узла становится на его место
-else
-parent->rightPtr = node->leftPtr;//значит узел находится справа у родителя, удаляем его
-}
-else if (node->leftPtr == 0)//аналогично
-{
-if (parent == 0)
-root = node->rightPtr;
-else if (parent->leftPtr == node)
-parent->leftPtr = node->rightPtr;
-else
-parent->rightPtr = node->rightPtr;
-}
-else //у него есть 2 потомка
-{
-Node *c, *p = node;//2 указателя на удаляемый узел
-for (c = node->rightPtr; c->leftPtr != NULL; c = c->leftPtr) p = c;//ищем в правой ветви крайний левый узел
-if (p != node)
-{
-p->leftPtr = c->rightPtr;
-c->rightPtr = node->rightPtr;
-}
-c->leftPtr = node->leftPtr;
-if (parent == 0)//если это случай, когда узел -это корень
-root = c;//просто крайний левый ставим в корень
-else if (parent->leftPtr == node)//если есть родитель, то теперь родитель указывает слева на крайний левый узел
-parent->leftPtr = c;
-else
-parent->rightPtr = c;//аналогично
-}
-delete node;//до этого расставляли верно указатели, что бы не разрушить структуру дерева, а сейчас удаляем узел.
-*/

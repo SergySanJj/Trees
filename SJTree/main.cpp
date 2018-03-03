@@ -10,8 +10,8 @@ int main()
 	tree.add(2, 32);
 	tree.add(1, 22);
 	//tree.add(33, 2);
-	//tree.clear();
-	
+	tree.clear();
+	tree.add(11, 1);
 	//tree.del(2);
 	//tree.del(33);
 	while (true)

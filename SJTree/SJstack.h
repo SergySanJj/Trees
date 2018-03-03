@@ -43,7 +43,7 @@ SJstack<T>::~SJstack()
 }
 
 template <class T>
-bool SJstack<T>::sPush(T pushData)
+inline bool SJstack<T>::sPush(T pushData)
 {
 	TNode<T> *pNew = new TNode<T>();
 	pNew->data = pushData;
@@ -54,7 +54,7 @@ bool SJstack<T>::sPush(T pushData)
 }
 
 template <class T>
-const T SJstack<T>::sPop()
+inline const T SJstack<T>::sPop() // methods that return variables probably won't be "inlined" in disassembed code
 {
 	if (this->pTop == NULL)
 		return T();              // value of default constructor
@@ -66,22 +66,20 @@ const T SJstack<T>::sPop()
 }
 
 template <class T>
-const T SJstack<T>::sWatch()
+inline const T SJstack<T>::sWatch()
 {
-	T res;
 	if (this->pTop == NULL)
 	{
 		return T();             // value of default constructor
 	}
 	else
 	{
-		res = (this->pTop->data);
+		return (this->pTop->data);
 	}
-	return res;
 }
 
 template <class T>
-bool SJstack<T>::watch(T &result)
+inline bool SJstack<T>::watch(T &result)
 {
 	if (this->pTop == NULL)
 	{

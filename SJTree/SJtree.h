@@ -209,39 +209,44 @@ namespace Tree
 			return;
 
 		sNode *pCurNode = this->pRoot;
-		while (deleteKey != pCurNode->key && (pCurNode->pLeft != NULL || pCurNode->pRight != NULL))
+		if (this->pRoot->key != deleteKey)
 		{
-			if (deleteKey < pCurNode->key)
+			while (deleteKey != pCurNode->key && (pCurNode->pLeft != NULL || pCurNode->pRight != NULL))
 			{
-				if (pCurNode->pLeft != NULL)
+				if (deleteKey < pCurNode->key)
 				{
-					pCurNode = pCurNode->pLeft;
-					continue;
+					if (pCurNode->pLeft != NULL)
+					{
+						pCurNode = pCurNode->pLeft;
+						continue;
+					}
+					else
+						return;
 				}
 				else
-					return;
+				{
+					if (pCurNode->pRight != NULL)
+					{
+						pCurNode = pCurNode->pRight;
+						continue;
+					}
+					else
+						return;
+				}
+			}
+			if (pCurNode->key == deleteKey)
+			{
+				SJstack<sNode> treeStack;
+				traversePostOrder(pCurNode, treeStack, deleteKey);
+
+				recDelete(pCurNode);
+				buildFromStack(treeStack);
 			}
 			else
-			{
-				if (pCurNode->pRight != NULL)
-				{
-					pCurNode = pCurNode->pRight;
-					continue;
-				}
-				else
-					return;
-			}
+				return;
 		}
-		if (pCurNode->key == deleteKey)
-		{
-			SJstack<sNode> treeStack;
-			traversePostOrder(pCurNode, treeStack, deleteKey);
-
-			recDelete(pCurNode);
-			buildFromStack(treeStack);
-		}
-		else
-			return;
+		SJstack<sNode> treeStack;
+		
 	}
 
 	template <typename keyType, class dataType>
@@ -285,8 +290,9 @@ namespace Tree
 	template <typename keyType, class dataType>
 	void searchTree<keyType, dataType>::clear()
 	{
+		
 		recDelete(this->pRoot);
-		this->pRoot = NULL;
+		//this->pRoot = NULL;
 	}
 }
 

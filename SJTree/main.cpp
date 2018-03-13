@@ -1,27 +1,31 @@
 #include <iostream>
 #include "SJtree.h"
+#include "SJstack.h"
 
 using namespace Tree;
 
 int main()
 {
-	searchTree<int, int> tree;
-	//tree.add(1, 1);
-	tree.add(2, 32);
-	tree.add(1, 22);
-	//tree.add(33, 2);
-	tree.clear();
-	tree.add(11, 1);
-	tree.add(2, 32);
-	tree.del(2);
-	tree.add(2, 32);
-	//tree.del(33);
-	while (true)
+	SearchTree<int, int> tree;
+	SJstack< pair<int, int> > stackk;
+	int a = 0;
+	int b;
+	while (a != -1)
 	{
-		int a, b = 0;
-		cin >> a;
-		cout << tree.find(a, b) << '\n';
+		cin >> a >> b;
+		if (a == -1)
+			break;
+		stackk.sPush(pair<int, int>(a, b));
 	}
+	//stackk.sPush(pair<int, int>(2, 29));
+	cout << '\n';
+	tree.buildFromStack(stackk);
+	tree.printPostOrder();
+	while (tree.rotateRight())
+	{
+		tree.printPostOrder();
+	}
+	stackk.sPush(pair<int, int>(1, 8));
 	system("pause");
 	return 0;
 }

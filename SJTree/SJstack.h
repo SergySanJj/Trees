@@ -6,8 +6,9 @@
 using namespace std;
 
 template <class T>
-struct TNode
+class TNode
 {
+public:
 	TNode()
 	{
 

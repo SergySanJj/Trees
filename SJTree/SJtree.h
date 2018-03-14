@@ -10,7 +10,7 @@ namespace Tree
 	using namespace std;
 
 	template <typename keyType, class dataType>
-	struct SearchNode
+	class SearchNode
 	{
 	public:
 		keyType  key;  // standart type key so we can do operations between them like <,>,==
@@ -66,7 +66,8 @@ namespace Tree
 		bool rotateRight();                                     // tree rotation to the right
 		bool rotateLeft();                                      // tree rotation to the left
 		void printPostOrder();                                  // wrapper function for backend print
-
+		void printInOrder();
+		
 	private:
 		//Data//
 		sNode *Root = nullptr;
@@ -79,6 +80,8 @@ namespace Tree
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
 		void BE_printPostOrder(sNode *subTree);
 		void delElement(sNode *curNode, keyType deleteKey);									  // delets element with deleteKey could be found from chosen node
+
+		void traverseInOrder(sNode *subTree);
 
 		sNode *leftMost(sNode *curNode);
 		sNode *rightMost(sNode *curNode);
@@ -348,6 +351,30 @@ namespace Tree
 	{
 		BE_printPostOrder(this->Root);
 		cout << '\n';
+	}
+
+
+	template<typename keyType, class dataType>
+	inline void SearchTree<keyType, dataType>::printInOrder()
+	{
+		traverseInOrder(this->Root);
+		cout << '\n';
+	}
+
+	template<typename keyType, class dataType>
+	inline void SearchTree<keyType, dataType>::traverseInOrder(sNode * subTree)
+	{
+		if (subTree->_left == nullptr)
+		{
+			cout << subTree->key << ' ';
+			return;
+		}
+		traverseInOrder(subTree->_left);
+		cout << subTree->key << ' ';
+		if (subTree->_right == nullptr)
+		{
+			cout << subTree->_right->key << ' ';
+		}
 	}
 
 	template <typename keyType, class dataType>

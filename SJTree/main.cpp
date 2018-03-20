@@ -22,12 +22,22 @@ int main()
 	cout << '\n';
 	tree.buildFromStack(stackk);
 
+	tree.printPostOrder();
+	tree.printInOrder();
+	tree.printPreOrder();
+	cout << '\n';
+
 	tree.del(15);
+	cout << tree.find(15, a) << '\n';
 
 	tree.printPostOrder();
 	tree.printInOrder();
 	tree.printPreOrder();
 	cout << '\n';
+
+	tree.del(15);
+	cout << tree.find(15, a) << '\n';
+
 	while (tree.rotateRight())
 	{
 		tree.printPostOrder();
@@ -47,7 +57,9 @@ int main()
 1 0
 28 100
 5 4 
+15 6
 8 0
+15 10
 10 4
 50 2
 50 1

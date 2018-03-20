@@ -17,12 +17,10 @@ namespace Tree
 		dataType data; // so any type data can be stored
 		SearchNode<keyType, dataType> *_left = nullptr;   // left sub-tree
 		SearchNode<keyType, dataType> *_right = nullptr;  // right sub-tree
-		SearchNode<keyType, dataType> *_parent = nullptr; // parent of current node, if this node is root => _parent must stay nullptr
-		char _side = 'n';                                 // l - is left son, r - is right son, n - is not a son
 
 		SearchNode() { key = keyType(); data = dataType(); }
 
-		~SearchNode() { _left = nullptr; _right = nullptr; _parent = nullptr; }
+		~SearchNode() { _left = nullptr; _right = nullptr; }
 
 		SearchNode(keyType key, dataType data)  // copy constructor
 		{
@@ -75,8 +73,7 @@ namespace Tree
 		void BE_printPostOrder(sNode *subTree);
 		void BE_printInOrder(sNode *subTree);
 		void BE_printPreOrder(sNode *subTree);
-		void delElement(sNode *curNode, keyType deleteKey);									  // delets element with deleteKey could be found from chosen node
-		sNode* DeleteNode(sNode* subNode, dataType val);
+		sNode* DeleteNode(sNode* subNode, dataType val);                                      // delets element with deleteKey could be found from chosen node
 
 		sNode *leftMost(sNode *curNode);
 		sNode *rightMost(sNode *curNode);
@@ -103,7 +100,6 @@ namespace Tree
 			sNode *newElem = new sNode();
 			newElem->data = addElement;
 			newElem->key = addKey;
-			newElem->_side = 'n';
 			this->Root = newElem;
 			return;
 		}
@@ -126,8 +122,6 @@ namespace Tree
 				subTree->_right = new sNode();
 				subTree->_right->key = addKey;
 				subTree->_right->data = addElement;
-				subTree->_right->_side = 'r';
-				subTree->_right->_parent = subTree;
 				return;
 			}
 			recAdd(addKey, addElement, subTree->_right);
@@ -138,8 +132,6 @@ namespace Tree
 			subTree->_left = new sNode();
 			subTree->_left->key = addKey;
 			subTree->_left->data = addElement;
-			subTree->_left->_side = 'l';
-			subTree->_left->_parent = subTree;
 			return;
 		}
 		recAdd(addKey, addElement, subTree->_left);
@@ -152,25 +144,6 @@ namespace Tree
 		{
 			recDelete(subTree->_left);
 			recDelete(subTree->_right);
-			if (subTree->_side == 'l')
-				subTree->_parent->_left = nullptr;
-			else if (subTree->_side == 'r')
-				subTree->_parent->_right = nullptr;
-			else if (subTree->_side == 'n')
-			{
-				if (subTree->_left != nullptr)
-				{
-					this->Root = subTree->_left;
-				}
-				else if (subTree->_right != nullptr)
-				{
-					this->Root = subTree->_right;
-				}
-				else
-				{
-					this->Root = nullptr;
-				}
-			}
 			delete subTree;
 		}
 	}
@@ -318,19 +291,11 @@ namespace Tree
 				return 0;
 
 			sNode* newRoot = this->Root->_left;
-			newRoot->_parent = nullptr;
-			newRoot->_side = 'n';
+
 			
 			this->Root->_left = newRoot->_right;
-			if (newRoot->_right != nullptr)
-			{
-				newRoot->_right->_side = 'l';
-				newRoot->_right->_parent = this->Root;
-			}
 			
 			newRoot->_right = this->Root;
-			this->Root->_parent = newRoot;
-			this->Root->_side = 'r';
 
 			this->Root = newRoot;
 
@@ -349,18 +314,10 @@ namespace Tree
 				return 0;
 
 			sNode* newRoot = this->Root->_right;
-			newRoot->_parent = nullptr;
-			newRoot->_side = 'n';
 
 			this->Root->_right = newRoot->_left;
-			if (newRoot->_left != nullptr)
-			{
-				newRoot->_left->_side = 'r';
-				newRoot->_left->_parent = this->Root;
-			}
+
 			newRoot->_left = this->Root;
-			this->Root->_parent = newRoot;
-			this->Root->_side = 'l';
 
 			this->Root = newRoot;
 
@@ -396,7 +353,7 @@ namespace Tree
 			return subNode;
 		//If element is at the root of subTree & has 2 sons -> 
 		//replace it with min el of right sub-tree and del min el
-		if (val == subNode->data) {
+		if (val == subNode->key) {
 
 			sNode* tmp;
 			if (subNode->_right == nullptr)
@@ -406,26 +363,16 @@ namespace Tree
 				sNode* ptr = subNode->_right;
 				if (ptr->_left == nullptr) {
 					ptr->_left = subNode->_left;
-					ptr->_left->_parent = ptr;
 					tmp = ptr;
 				}
 				else {
 
-					sNode* pmin = ptr->_left;
-					while (pmin->_left != nullptr) {
-						ptr = pmin;
-						pmin = ptr->_left;
-					}
-					pmin->_parent->_left = nullptr;
-					pmin->_parent = subNode->_parent;
+					sNode* pmin = leftMost(ptr->_left);
 
 					ptr->_left = pmin->_right;
 					pmin->_left = subNode->_left;
 					pmin->_right = subNode->_right;
-					if (pmin->_left!= nullptr)
-						pmin->_left->_parent = pmin;
-					if (pmin->_right != nullptr)
-						pmin->_right->_parent = pmin;
+
 					tmp = pmin;
 				}
 			}
@@ -433,7 +380,7 @@ namespace Tree
 			delete subNode;
 			return tmp;
 		}
-		else if (val < subNode->data)
+		else if (val < subNode->key)
 			subNode->_left = DeleteNode(subNode->_left, val);
 		else
 			subNode->_right = DeleteNode(subNode->_right, val);

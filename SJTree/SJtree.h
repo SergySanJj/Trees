@@ -17,21 +17,10 @@ namespace Tree
 		dataType data; // so any type data can be stored
 		SearchNode<keyType, dataType> *_left = nullptr;   // left sub-tree
 		SearchNode<keyType, dataType> *_right = nullptr;  // right sub-tree
-		SearchNode<keyType, dataType> *_parent = nullptr; // parent of current node, if this node is root => _parent must stay nullptr
-		char _side = 'n';                                 // l - is left son, r - is right son, n - is not a son
 
-		SearchNode()
-		{
-			key = keyType();
-			data = dataType();
-		}
+		SearchNode() { key = keyType(); data = dataType(); }
 
-		~SearchNode()
-		{
-			this->_left = nullptr;
-			this->_right = nullptr;
-			this->_parent = nullptr;
-		}
+		~SearchNode() { _left = nullptr; _right = nullptr; }
 
 		SearchNode(keyType key, dataType data)  // copy constructor
 		{
@@ -45,8 +34,8 @@ namespace Tree
 		}
 	};
 
-#define sTree SearchTree<keyType, dataType>
-#define sNode SearchNode<keyType, dataType>
+#define sTree    SearchTree<keyType, dataType>
+#define sNode    SearchNode<keyType, dataType>
 #define dataPair pair<keyType, dataType>
 
 	template <typename keyType, class dataType>
@@ -56,32 +45,35 @@ namespace Tree
 		SearchTree();
 		~SearchTree();
 
-		void add(keyType addKey, dataType addElement);          // interface to add element
-		bool find(keyType searchKey, dataType &resultVariable); // search first element with searchKey key, return 1 and change resultVariable if such element was found,
-																//return 0 and don't change resultVariable if such element doesn't exist
+		void add(keyType addKey, dataType addElement);          // Interface to add element.
+		bool find(keyType searchKey, dataType &resultVariable); // Search first element with searchKey key, return 1 and change resultVariable if such element was found,
+																//return 0 and don't change resultVariable if such element doesn't exist.
 		
-		void buildFromStack(SJstack<dataPair> &pairStack);      // add new row of elements from stack to the tree
-		void del(keyType deleteKey);                            // delete first element with deleteKey key
-		void clear();                                           // delete all nodes from tree
-		bool rotateRight();                                     // tree rotation to the right
-		bool rotateLeft();                                      // tree rotation to the left
-		void printPostOrder();                                  // wrapper function for backend print
+		void buildFromStack(SJstack<dataPair> &pairStack);      // Add new row of elements from stack to the tree.
+		void del(keyType deleteKey);                            // Delete closest to root element with deleteKey key.
+		void clear();                                           // Delete all nodes from tree.
+		bool rotateRight();                                     // Tree rotation to the right.
+		bool rotateLeft();                                      // Tree rotation to the left.
+		void printPostOrder();                                  // Wrapper function for backend print.
 		void printInOrder();
+		void printPreOrder();
 		
+
 	private:
 		//Data//
 		sNode *Root = nullptr;
 
 		//Methods//
 		bool cmp(keyType addKey, sNode *subTree);                                             // 0 == left, 1 == right, subTree is a sub-tree on chosen level
-		void recAdd(keyType addKey, dataType addElement, sNode *subTree);                     // recursive adding of element to the sub-tree by rule: go left if key<=currentKey, otherwise go right
+		void recAdd(keyType addKey, dataType addElement, sNode *subTree);                     // recursive adding of element to the sub-tree by rule: go left 
+		                                                                                      //if key<=currentKey, otherwise go right
 		void recDelete(sNode *subTree);                                                       // recursive deletting all inheritor nodes, used as destructor
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack);                    // traverse tree in post-order and add each node into stack
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
 		void BE_printPostOrder(sNode *subTree);
-		void delElement(sNode *curNode, keyType deleteKey);									  // delets element with deleteKey could be found from chosen node
-
-		void traverseInOrder(sNode *subTree);
+		void BE_printInOrder(sNode *subTree);
+		void BE_printPreOrder(sNode *subTree);
+		sNode* DeleteNode(sNode* subNode, dataType val);                                      // delets element with deleteKey could be found from chosen node
 
 		sNode *leftMost(sNode *curNode);
 		sNode *rightMost(sNode *curNode);
@@ -108,7 +100,6 @@ namespace Tree
 			sNode *newElem = new sNode();
 			newElem->data = addElement;
 			newElem->key = addKey;
-			newElem->_side = 'n';
 			this->Root = newElem;
 			return;
 		}
@@ -131,8 +122,6 @@ namespace Tree
 				subTree->_right = new sNode();
 				subTree->_right->key = addKey;
 				subTree->_right->data = addElement;
-				subTree->_right->_side = 'r';
-				subTree->_right->_parent = subTree;
 				return;
 			}
 			recAdd(addKey, addElement, subTree->_right);
@@ -143,8 +132,6 @@ namespace Tree
 			subTree->_left = new sNode();
 			subTree->_left->key = addKey;
 			subTree->_left->data = addElement;
-			subTree->_left->_side = 'l';
-			subTree->_left->_parent = subTree;
 			return;
 		}
 		recAdd(addKey, addElement, subTree->_left);
@@ -157,25 +144,6 @@ namespace Tree
 		{
 			recDelete(subTree->_left);
 			recDelete(subTree->_right);
-			if (subTree->_side == 'l')
-				subTree->_parent->_left = nullptr;
-			else if (subTree->_side == 'r')
-				subTree->_parent->_right = nullptr;
-			else if (subTree->_side == 'n')
-			{
-				if (subTree->_left != nullptr)
-				{
-					this->Root = subTree->_left;
-				}
-				else if (subTree->_right != nullptr)
-				{
-					this->Root = subTree->_right;
-				}
-				else
-				{
-					this->Root = nullptr;
-				}
-			}
 			delete subTree;
 		}
 	}
@@ -225,7 +193,7 @@ namespace Tree
 		if (this->Root == nullptr) // stop if empty
 			return;
 
-		delElement(this->Root, deleteKey);
+		DeleteNode(this->Root, deleteKey);
 	}
 
 	template <typename keyType, class dataType>
@@ -279,6 +247,33 @@ namespace Tree
 			return;
 	}
 
+	template<typename keyType, class dataType>
+	inline void SearchTree<keyType, dataType>::BE_printInOrder(sNode * subTree)
+	{
+		if (subTree != nullptr)
+		{
+			BE_printInOrder(subTree->_left);
+			cout << subTree->key << ' '; // only key because there can be no << operator for dataType
+			BE_printInOrder(subTree->_right);
+		}
+		else
+			return;
+	}
+
+	template<typename keyType, class dataType>
+	inline void SearchTree<keyType, dataType>::BE_printPreOrder(sNode * subTree)
+	{
+		if (subTree != nullptr)
+		{
+			cout << subTree->key << ' '; // only key because there can be no << operator for dataType
+			BE_printPreOrder(subTree->_left);
+			BE_printPreOrder(subTree->_right);
+		}
+		else
+			return;
+	}
+
+
 	template <typename keyType, class dataType>
 	void SearchTree<keyType, dataType>::clear()
 	{
@@ -296,19 +291,11 @@ namespace Tree
 				return 0;
 
 			sNode* newRoot = this->Root->_left;
-			newRoot->_parent = nullptr;
-			newRoot->_side = 'n';
+
 			
 			this->Root->_left = newRoot->_right;
-			if (newRoot->_right != nullptr)
-			{
-				newRoot->_right->_side = 'l';
-				newRoot->_right->_parent = this->Root;
-			}
 			
 			newRoot->_right = this->Root;
-			this->Root->_parent = newRoot;
-			this->Root->_side = 'r';
 
 			this->Root = newRoot;
 
@@ -327,18 +314,10 @@ namespace Tree
 				return 0;
 
 			sNode* newRoot = this->Root->_right;
-			newRoot->_parent = nullptr;
-			newRoot->_side = 'n';
 
 			this->Root->_right = newRoot->_left;
-			if (newRoot->_left != nullptr)
-			{
-				newRoot->_left->_side = 'r';
-				newRoot->_left->_parent = this->Root;
-			}
+
 			newRoot->_left = this->Root;
-			this->Root->_parent = newRoot;
-			this->Root->_side = 'l';
 
 			this->Root = newRoot;
 
@@ -353,69 +332,59 @@ namespace Tree
 		cout << '\n';
 	}
 
-
 	template<typename keyType, class dataType>
 	inline void SearchTree<keyType, dataType>::printInOrder()
 	{
-		traverseInOrder(this->Root);
+		BE_printInOrder(this->Root);
 		cout << '\n';
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::traverseInOrder(sNode * subTree)
+	inline void SearchTree<keyType, dataType>::printPreOrder()
 	{
-		if (subTree->_left == nullptr)
-		{
-			cout << subTree->key << ' ';
-			return;
-		}
-		traverseInOrder(subTree->_left);
-		cout << subTree->key << ' ';
-		if (subTree->_right == nullptr)
-		{
-			cout << subTree->_right->key << ' ';
-		}
+		BE_printPreOrder(this->Root);
+		cout << '\n';
 	}
 
+
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::delElement(sNode *curNode, keyType deleteKey)
-	{
-		if (curNode == nullptr)
-			return;
+	sNode* SearchTree<keyType, dataType>::DeleteNode(sNode* subNode, dataType val) {
+		if (subNode == nullptr)
+			return subNode;
+		//If element is at the root of subTree & has 2 sons -> 
+		//replace it with min el of right sub-tree and del min el
+		if (val == subNode->key) {
 
-		if (deleteKey < curNode->key)
-			return delElement(curNode->_left, deleteKey);
-		else if (deleteKey > curNode->key)
-			return delElement(curNode->_right, deleteKey);
-		else {
-			if (curNode->_left == nullptr && curNode->_right == nullptr) {
-				if (curNode->_parent->_left == curNode)
-					curNode->_parent->_left = nullptr;
-				else
-					curNode->_parent->_right = nullptr;
-				delete curNode;
-			}
+			sNode* tmp;
+			if (subNode->_right == nullptr)
+				tmp = subNode->_left;
 			else {
-				sNode * newnode = nullptr;
-				if (curNode->_left != nullptr)
-				{
-					newnode = rightMost(curNode->_left);
+
+				sNode* ptr = subNode->_right;
+				if (ptr->_left == nullptr) {
+					ptr->_left = subNode->_left;
+					tmp = ptr;
 				}
-				else
-					newnode = leftMost(curNode->_right);
+				else {
 
-				if (curNode->_parent->_left == curNode)
-					curNode->_parent->_left = newnode;
-				else
-					curNode->_parent->_right = newnode;
+					sNode* pmin = leftMost(ptr->_left);
 
-				newnode->_parent = curNode->_parent;
-				newnode->_right = curNode->_right;
-				newnode->_left = curNode->_left;
+					ptr->_left = pmin->_right;
+					pmin->_left = subNode->_left;
+					pmin->_right = subNode->_right;
 
-				delete curNode;
+					tmp = pmin;
+				}
 			}
+
+			delete subNode;
+			return tmp;
 		}
+		else if (val < subNode->key)
+			subNode->_left = DeleteNode(subNode->_left, val);
+		else
+			subNode->_right = DeleteNode(subNode->_right, val);
+		return subNode;
 	}
 
 	template <typename keyType, class dataType>

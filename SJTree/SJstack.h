@@ -4,10 +4,22 @@
 #define SJstack_H
 
 template <class T>
-struct TNode
+class TNode
 {
+<<<<<<< HEAD
 	TNode() {}
 	~TNode(){}
+=======
+public:
+	TNode()
+	{
+
+	}
+	~TNode()
+	{
+
+	}
+>>>>>>> origin/Dev
 	TNode<T> *prev = nullptr; // previous elem, nullptr at the begining
 	T data;
 };

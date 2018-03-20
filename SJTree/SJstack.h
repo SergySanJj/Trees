@@ -3,19 +3,11 @@
 #ifndef SJstack_H
 #define SJstack_H
 
-using namespace std;
-
 template <class T>
 struct TNode
 {
-	TNode()
-	{
-
-	}
-	~TNode()
-	{
-
-	}
+	TNode() {}
+	~TNode(){}
 	TNode<T> *prev = nullptr; // previous elem, nullptr at the begining
 	T data;
 };
@@ -27,13 +19,17 @@ public:
 	SJstack();
 	~SJstack();                 // deletes all elements from top to nullptr
 
+	size_t size() { return (this->_size); }
+
 	bool sPush(const T);        // add new elem at the end
 	const T sPop();             // return value of last elem and delete it
 	const T sWatch();           // return value of last elem
 	bool watch(T &result);      // 0 - not found, 1 - found
 	bool empty();               // 0 - empty , 1 - not empty
+	
 private:
 	TNode<T> *pTop = nullptr;      // pointer on the top element
+	size_t _size = 0;
 };
 
 template <class T>
@@ -53,6 +49,7 @@ SJstack<T>::~SJstack()
 		delete pTmp;
 	}
 	pTop = nullptr;
+	_size = 0;
 }
 
 template <class T>
@@ -62,7 +59,7 @@ inline bool SJstack<T>::sPush(T pushData)
 	pNew->data = pushData;
 	pNew->prev = this->pTop;
 	this->pTop = pNew;
-
+	this->_size++;
 	return 0;
 }
 
@@ -70,11 +67,12 @@ template <class T>
 inline const T SJstack<T>::sPop() // methods that return variables probably won't be "inlined" in disassembed code
 {
 	if (this->pTop == nullptr)
-		exit(1);           /// value of default constructor
+		exit(1);           /// value of default constructor or exit
 	T res = this->pTop->data;
 	TNode<T> *pTmp = this->pTop;
 	pTop = pTop->prev;
 	delete pTmp;
+	this->_size--;
 	return res;
 }
 
@@ -83,7 +81,7 @@ inline const T SJstack<T>::sWatch()
 {
 	if (this->pTop == nullptr)
 	{
-		exit(1);            /// value of default constructor
+		exit(1);            /// value of default constructor or exit
 	}
 	else
 	{

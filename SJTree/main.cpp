@@ -1,4 +1,5 @@
 #include <iostream>
+#include <Windows.h>
 #include "SJtree.h"
 #include "SJstack.h"
 
@@ -20,12 +21,35 @@ int main()
 	//stackk.sPush(pair<int, int>(2, 29));
 	cout << '\n';
 	tree.buildFromStack(stackk);
+
+	tree.del(15);
+
 	tree.printPostOrder();
+	tree.printInOrder();
+	tree.printPreOrder();
+	cout << '\n';
 	while (tree.rotateRight())
 	{
 		tree.printPostOrder();
+		tree.printInOrder();
+		tree.printPreOrder();
+		cout << '\n';
 	}
-	stackk.sPush(pair<int, int>(1, 8));
+	//stackk.sPush(pair<int, int>(1, 8));
 	system("pause");
 	return 0;
 }
+// examples :
+/*
+50 1
+25 1
+65 1
+1 0
+28 100
+5 4 
+8 0
+10 4
+50 2
+50 1
+-1 -1
+*/

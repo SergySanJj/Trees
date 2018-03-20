@@ -58,18 +58,7 @@ namespace Tree
 		void printInOrder();
 		void printPreOrder();
 		
-<<<<<<< HEAD
 
-=======
-		void buildFromStack(SJstack<dataPair> &pairStack);      // add new row of elements from stack to the tree
-		void del(keyType deleteKey);                            // delete first element with deleteKey key
-		void clear();                                           // delete all nodes from tree
-		bool rotateRight();                                     // tree rotation to the right
-		bool rotateLeft();                                      // tree rotation to the left
-		void printPostOrder();                                  // wrapper function for backend print
-		void printInOrder();
-		
->>>>>>> origin/Dev
 	private:
 		//Data//
 		sNode *Root = nullptr;
@@ -85,8 +74,6 @@ namespace Tree
 		void BE_printInOrder(sNode *subTree);
 		void BE_printPreOrder(sNode *subTree);
 		sNode* DeleteNode(sNode* subNode, dataType val);                                      // delets element with deleteKey could be found from chosen node
-
-		void traverseInOrder(sNode *subTree);
 
 		sNode *leftMost(sNode *curNode);
 		sNode *rightMost(sNode *curNode);
@@ -345,37 +332,8 @@ namespace Tree
 		cout << '\n';
 	}
 
-<<<<<<< HEAD
 	template<typename keyType, class dataType>
 	inline void SearchTree<keyType, dataType>::printInOrder()
-=======
-
-	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::printInOrder()
-	{
-		traverseInOrder(this->Root);
-		cout << '\n';
-	}
-
-	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::traverseInOrder(sNode * subTree)
-	{
-		if (subTree->_left == nullptr)
-		{
-			cout << subTree->key << ' ';
-			return;
-		}
-		traverseInOrder(subTree->_left);
-		cout << subTree->key << ' ';
-		if (subTree->_right == nullptr)
-		{
-			cout << subTree->_right->key << ' ';
-		}
-	}
-
-	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::delElement(sNode *curNode, keyType deleteKey)
->>>>>>> origin/Dev
 	{
 		BE_printInOrder(this->Root);
 		cout << '\n';

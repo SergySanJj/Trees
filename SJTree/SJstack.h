@@ -6,20 +6,9 @@
 template <class T>
 class TNode
 {
-<<<<<<< HEAD
+public:
 	TNode() {}
 	~TNode(){}
-=======
-public:
-	TNode()
-	{
-
-	}
-	~TNode()
-	{
-
-	}
->>>>>>> origin/Dev
 	TNode<T> *prev = nullptr; // previous elem, nullptr at the begining
 	T data;
 };

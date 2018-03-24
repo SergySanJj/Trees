@@ -111,10 +111,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AVLtree.h" />
     <ClInclude Include="SJstack.h" />
     <ClInclude Include="SJtree.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AVLtree.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SJstack.cpp" />
     <ClCompile Include="SJtree.cpp" />

@@ -2,49 +2,36 @@
 #include <Windows.h>
 #include "SJtree.h"
 #include "SJstack.h"
+#include "AVLtree.h"
 
-using namespace Tree;
+using namespace AVLTree;
 
 int main()
 {
-	SearchTree<int, int> tree;
+	AVLtree<int, int> tree;
 	SJstack< pair<int, int> > stackk;
 	int a = 0;
 	int b;
-	while (a != -1)
+	char c= '0';
+	while (c != 'E')
 	{
-		cin >> a >> b;
-		if (a == -1)
-			break;
-		stackk.sPush(pair<int, int>(a, b));
+		cin >> c;
+		if (c == '1')
+		{
+			cin >> a >> b;
+			tree.add(a, b);
+		}
+		else if (c == '0')
+		{
+			cin >> a;
+			tree.del(a);
+		}
+		tree.printInOrder();
 	}
 	//stackk.sPush(pair<int, int>(2, 29));
-	cout << '\n';
-	tree.buildFromStack(stackk);
-
-	tree.printPostOrder();
-	tree.printInOrder();
-	tree.printPreOrder();
-	cout << '\n';
-
-	tree.del(15);
-	cout << tree.find(15, a) << '\n';
-
-	tree.printPostOrder();
-	tree.printInOrder();
-	tree.printPreOrder();
-	cout << '\n';
-
-	tree.del(15);
-	cout << tree.find(15, a) << '\n';
-
-	while (tree.rotateRight())
-	{
-		tree.printPostOrder();
-		tree.printInOrder();
-		tree.printPreOrder();
-		cout << '\n';
-	}
+	//cout << '\n';
+	//tree.buildFromStack(stackk);
+	
 	//stackk.sPush(pair<int, int>(1, 8));
 	system("pause");
 	return 0;

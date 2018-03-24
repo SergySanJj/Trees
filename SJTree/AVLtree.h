@@ -1,11 +1,11 @@
 #pragma once
 
-#ifndef SJtree_H_
-#define SJtree_H_
+#ifndef AVLtree_H_
+#define AVLtree_H_
 
 #include "SJstack.h" // my version of stack class
 
-namespace Tree
+namespace AVLTree
 {
 	using namespace std;
 
@@ -17,7 +17,7 @@ namespace Tree
 		dataType data; // so any type data can be stored
 		SearchNode<keyType, dataType> *_left = nullptr;   // left sub-tree
 		SearchNode<keyType, dataType> *_right = nullptr;  // right sub-tree
-
+		unsigned char _height;
 		SearchNode() { key = keyType(); data = dataType(); }
 
 		~SearchNode() { _left = nullptr; _right = nullptr; }
@@ -26,6 +26,7 @@ namespace Tree
 		{
 			this->key = key;
 			this->data = data;
+			this->_height = 1;
 		}
 
 		SearchNode<keyType, dataType> operator = (const SearchNode<keyType, dataType> &searchNode2)
@@ -34,118 +35,91 @@ namespace Tree
 		}
 	};
 
-#define sTree    SearchTree<keyType, dataType>
+
+#define sAVLTree    AVLtree<keyType, dataType>
 #define sNode    SearchNode<keyType, dataType>
 #define dataPair pair<keyType, dataType>
 
 	template <typename keyType, class dataType>
-	class SearchTree
+	class AVLtree
 	{
 	public:
-		SearchTree();
-		~SearchTree();
+		AVLtree();
+		~AVLtree();
 
 		sNode* getRoot();
 		void add(keyType addKey, dataType addElement);          // Interface to add element.
 		bool find(keyType searchKey, dataType &resultVariable); // Search first element with searchKey key, return 1 and change resultVariable if such element was found,
 																//return 0 and don't change resultVariable if such element doesn't exist.
-		
+
 		void buildFromStack(SJstack<dataPair> &pairStack);      // Add new row of elements from stack to the tree.
 		void del(keyType deleteKey);                            // Delete closest to root element with deleteKey key.
 		void clear();                                           // Delete all nodes from tree.
-		bool rotateRight(sNode* subTree);                                     // Tree rotation to the right.
-		bool rotateLeft(sNode* subTree);                                      // Tree rotation to the left.
 		void printPostOrder();                                  // Wrapper function for backend print.
 		void printInOrder();
 		void printPreOrder();
-		
+
 
 	private:
 		//Data//
-		sNode *Root = nullptr;
+		sNode * Root = nullptr;
 
 		//Methods//
-		bool cmp(keyType addKey, sNode *subTree);                                             // 0 == left, 1 == right, subTree is a sub-tree on chosen level
-		void recAdd(keyType addKey, dataType addElement, sNode *subTree);                     // recursive adding of element to the sub-tree by rule: go left 
-		                                                                                      //if key<=currentKey, otherwise go right
+
 		void recDelete(sNode *subTree);                                                       // recursive deletting all inheritor nodes, used as destructor
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack);                    // traverse tree in post-order and add each node into stack
 		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
 		void BE_printPostOrder(sNode *subTree);
 		void BE_printInOrder(sNode *subTree);
 		void BE_printPreOrder(sNode *subTree);
-		sNode* DeleteNode(sNode* subNode, dataType val);                                      // delets element with deleteKey could be found from chosen node
 
 		sNode *leftMost(sNode *curNode);
 		sNode *rightMost(sNode *curNode);
+
+		sNode* rotateRight(sNode* subTree);                                    // Tree rotation to the right.
+		sNode* rotateLeft(sNode* subTree);                                     // Tree rotation to the left.
+
+		sNode* recInsert(keyType addKey, dataType addElement, sNode *subTree); // recursive adding of element to the sub-tree by rule: go left 
+																			   //if key<=currentKey, otherwise go right
+
+		sNode* rightLeast(sNode* subTree);                                     // returns least node of right son's sub-tree
+		sNode* delLeast(sNode* subTree);
+
+		sNode* recDelete(sNode* subNode, keyType val);                         // deletes element with deleteKey could be found from chosen node
+		
+		unsigned char height(sNode* subNode);
+		int bFactor(sNode* subNode);                                           // diff between right and left son's heights
+		void fixHeight(sNode* subNode);
+		sNode* balance(sNode* subNode);
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	template <typename keyType, class dataType>
-	SearchTree<keyType, dataType>::SearchTree()
+	AVLtree<keyType, dataType>::AVLtree()
 	{
 	}
 
 	template <typename keyType, class dataType>
-	SearchTree<keyType, dataType>::~SearchTree()
+	AVLtree<keyType, dataType>::~AVLtree()
 	{
 		recDelete(this->Root);
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * SearchTree<keyType, dataType>::getRoot()
+	inline sNode * AVLtree<keyType, dataType>::getRoot()
 	{
 		return this->Root;
 	}
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::add(keyType addKey, dataType addElement)
+	void AVLtree<keyType, dataType>::add(keyType addKey, dataType addElement)
 	{
-		if (this->Root == nullptr)
-		{
-			sNode *newElem = new sNode();
-			newElem->data = addElement;
-			newElem->key = addKey;
-			this->Root = newElem;
-			return;
-		}
-		recAdd(addKey, addElement, this->Root);
+		this->Root = recInsert(addKey, addElement, this->Root);
 	}
 
 	template <typename keyType, class dataType>
-	bool SearchTree<keyType, dataType>::cmp(keyType addKey, sNode *subTree)
-	{
-		return (addKey > subTree->key);
-	}
-
-	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::recAdd(keyType addKey, dataType addElement, sNode *subTree)
-	{
-		if (cmp(addKey, subTree))
-		{
-			if (subTree->_right == nullptr)
-			{
-				subTree->_right = new sNode();
-				subTree->_right->key = addKey;
-				subTree->_right->data = addElement;
-				return;
-			}
-			recAdd(addKey, addElement, subTree->_right);
-			return;
-		}
-		if (subTree->_left == nullptr)
-		{
-			subTree->_left = new sNode();
-			subTree->_left->key = addKey;
-			subTree->_left->data = addElement;
-			return;
-		}
-		recAdd(addKey, addElement, subTree->_left);
-	}
-
-	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::recDelete(sNode *subTree)
+	void AVLtree<keyType, dataType>::recDelete(sNode *subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -156,7 +130,7 @@ namespace Tree
 	}
 
 	template <typename keyType, class dataType>
-	bool SearchTree<keyType, dataType>::find(keyType searchKey, dataType &resultVariable) // ln(n) travers search using pre-order search
+	bool AVLtree<keyType, dataType>::find(keyType searchKey, dataType &resultVariable) // ln(n) travers search using pre-order search
 	{
 		if (this->Root == nullptr) // stop if empty
 			return 0;
@@ -195,16 +169,15 @@ namespace Tree
 	}
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::del(keyType deleteKey)
+	void AVLtree<keyType, dataType>::del(keyType deleteKey)
 	{
 		if (this->Root == nullptr) // stop if empty
 			return;
-
-		DeleteNode(this->Root, deleteKey);
+		this->Root = recDelete(this->Root, deleteKey);
 	}
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::buildFromStack(SJstack<dataPair> &pairStack)
+	void AVLtree<keyType, dataType>::buildFromStack(SJstack<dataPair> &pairStack)
 	{
 		dataPair tmpPair;
 		while (!pairStack.empty())
@@ -215,7 +188,7 @@ namespace Tree
 	}
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack)
+	void AVLtree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack)
 	{
 		if (subTree != nullptr)
 		{
@@ -228,7 +201,7 @@ namespace Tree
 	}
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey)
+	void AVLtree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey)
 	{
 		if (subTree != nullptr)
 		{
@@ -242,7 +215,7 @@ namespace Tree
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::BE_printPostOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printPostOrder(sNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -255,7 +228,7 @@ namespace Tree
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::BE_printInOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printInOrder(sNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -268,7 +241,7 @@ namespace Tree
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::BE_printPreOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printPreOrder(sNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -282,122 +255,182 @@ namespace Tree
 
 
 	template <typename keyType, class dataType>
-	void SearchTree<keyType, dataType>::clear()
+	void AVLtree<keyType, dataType>::clear()
 	{
 		recDelete(this->Root);
 	}
 
 	template<typename keyType, class dataType>
-	inline bool SearchTree<keyType, dataType>::rotateRight(sNode* subTree)
+	sNode* AVLtree<keyType, dataType>::rotateRight(sNode* subTree)
 	{
 		if (subTree == nullptr)
-			return 0;
+			return nullptr;
 		else
 		{
-			if (subTree->_left == nullptr)
-				return 0;
+			//if (subTree->_left == nullptr)
+				//return nullptr;
 
 			sNode* newRoot = subTree->_left;
 
-			
 			subTree->_left = newRoot->_right;
-			
+
 			newRoot->_right = subTree;
 
-			if (this->Root == subTree)
-				this->Root = newRoot;
+			fixHeight(newRoot);
 
-			return 1;
+			return newRoot;
 		}
 	}
 
 	template<typename keyType, class dataType>
-	inline bool SearchTree<keyType, dataType>::rotateLeft(sNode* subTree)
+	sNode* AVLtree<keyType, dataType>::rotateLeft(sNode* subTree)
 	{
 		if (subTree == nullptr)
-			return 0;
+			return nullptr;
 		else
 		{
-			if (subTree->_right == nullptr)
-				return 0;
+			//if (subTree->_right == nullptr)
+				//return nullptr;
 
 			sNode* newRoot = subTree->_right;
 
 			subTree->_right = newRoot->_left;
 
-			newRoot->_left = this->Root;
+			newRoot->_left = subTree;
 
-			if (this->Root == subTree)
-				this->Root = newRoot;
+			fixHeight(subTree);
+			fixHeight(newRoot);
 
-			return 1;
+			return newRoot;
 		}
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::printPostOrder()
+	inline sNode * AVLtree<keyType, dataType>::recInsert(keyType addKey, dataType addElement, sNode * subTree)
+	{
+		if (subTree == nullptr) 
+			return new sNode(addKey, addElement);
+
+		if (addKey < subTree->key)
+			subTree->_left = recInsert(addKey, addElement, subTree->_left);
+		else
+			subTree->_right = recInsert(addKey, addElement, subTree->_right);
+		return balance(subTree);
+	}
+
+	template<typename keyType, class dataType>
+	inline sNode * AVLtree<keyType, dataType>::rightLeast(sNode * subTree)
+	{
+		if (subTree->_left == nullptr)
+			return subTree;
+		else
+			return rightLeast(subTree->_left);
+	}
+
+	template<typename keyType, class dataType>
+	inline sNode * AVLtree<keyType, dataType>::delLeast(sNode * subTree)
+	{
+		if (subTree->_left == nullptr)
+			return subTree->_right;
+		subTree->_left = delLeast(subTree->_left);
+		return balance(subTree);
+	}
+
+	template<typename keyType, class dataType>
+	inline sNode * AVLtree<keyType, dataType>::recDelete(sNode * subNode, keyType val)
+	{
+		if (subNode == nullptr)
+			return nullptr;
+		if (val < subNode->key)
+			subNode->_left = recDelete(subNode->_left, val);
+		else if (val > subNode->key)
+			subNode->_right = recDelete(subNode->_right, val);
+
+		else //  found
+		{
+			sNode* leftSon = subNode->_left;
+			sNode* rightSon = subNode->_right;
+			delete subNode;
+			if (rightSon == nullptr) 
+				return leftSon;
+			sNode* min_ = rightLeast(rightSon);
+			min_->_right = delLeast(rightSon);
+			min_->_left = leftSon;
+			return balance(min_);
+		}
+
+		return balance(subNode);
+	}
+
+	template<typename keyType, class dataType>
+	inline unsigned char AVLtree<keyType, dataType>::height(sNode * subNode)
+	{
+		if (subNode != nullptr)
+			return subNode->_height;
+		else
+			return 0;
+	}
+
+	template<typename keyType, class dataType>
+	inline int AVLtree<keyType, dataType>::bFactor(sNode * subNode)
+	{
+		return (height(subNode->_right) - height(subNode->_left));
+	}
+
+	template<typename keyType, class dataType>
+	inline void AVLtree<keyType, dataType>::fixHeight(sNode * subNode)
+	{
+		unsigned char hleft = height(subNode->_left);
+		unsigned char hright = height(subNode->_right);
+
+		if (hleft > hright)
+			subNode->_height = hleft + 1;
+		else
+			subNode->_height = hright + 1;
+	}
+
+	template<typename keyType, class dataType>
+	inline sNode * AVLtree<keyType, dataType>::balance(sNode * subNode)
+	{
+		fixHeight(subNode);
+		if (bFactor(subNode) == 2)
+		{
+			if (bFactor(subNode->_right) < 0)
+				subNode->_right = rotateRight(subNode->_right);
+			return rotateLeft(subNode);
+		}
+		if (bFactor(subNode) == -2)
+		{
+			if (bFactor(subNode->_left) > 0)
+				subNode->_left = rotateLeft(subNode->_left);
+			return rotateRight(subNode);
+		}
+		return subNode;
+	}
+
+	template<typename keyType, class dataType>
+	inline void AVLtree<keyType, dataType>::printPostOrder()
 	{
 		BE_printPostOrder(this->Root);
 		cout << '\n';
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::printInOrder()
+	inline void AVLtree<keyType, dataType>::printInOrder()
 	{
 		BE_printInOrder(this->Root);
 		cout << '\n';
 	}
 
 	template<typename keyType, class dataType>
-	inline void SearchTree<keyType, dataType>::printPreOrder()
+	inline void AVLtree<keyType, dataType>::printPreOrder()
 	{
 		BE_printPreOrder(this->Root);
 		cout << '\n';
 	}
 
-
 	template <typename keyType, class dataType>
-	sNode* SearchTree<keyType, dataType>::DeleteNode(sNode* subNode, dataType val) {
-		if (subNode == nullptr)
-			return subNode;
-		//If element is at the root of subTree & has 2 sons -> 
-		//replace it with min el of right sub-tree and del min el
-		if (val == subNode->key) {
-
-			sNode* tmp;
-			if (subNode->_right == nullptr)
-				tmp = subNode->_left;
-			else {
-
-				sNode* ptr = subNode->_right;
-				if (ptr->_left == nullptr) {
-					ptr->_left = subNode->_left;
-					tmp = ptr;
-				}
-				else {
-
-					sNode* pmin = leftMost(ptr->_left);
-
-					ptr->_left = pmin->_right;
-					pmin->_left = subNode->_left;
-					pmin->_right = subNode->_right;
-
-					tmp = pmin;
-				}
-			}
-
-			delete subNode;
-			return tmp;
-		}
-		else if (val < subNode->key)
-			subNode->_left = DeleteNode(subNode->_left, val);
-		else
-			subNode->_right = DeleteNode(subNode->_right, val);
-		return subNode;
-	}
-
-	template <typename keyType, class dataType>
-	sNode * SearchTree<keyType, dataType>::leftMost(sNode *curNode) 
+	sNode * AVLtree<keyType, dataType>::leftMost(sNode *curNode)
 	{
 		if (curNode == nullptr)
 			return nullptr;
@@ -408,7 +441,7 @@ namespace Tree
 	}
 
 	template <typename keyType, class dataType>
-	sNode * SearchTree<keyType, dataType>::rightMost(sNode *curNode)
+	sNode * AVLtree<keyType, dataType>::rightMost(sNode *curNode)
 	{
 		if (curNode == nullptr)
 			return nullptr;
@@ -420,4 +453,4 @@ namespace Tree
 }
 
 
-#endif // !SJtree_H_
+#endif // !AVLTree_H_

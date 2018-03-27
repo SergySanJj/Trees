@@ -5,7 +5,7 @@
 
 #include "SJstack.h" // my version of stack class
 
-namespace Tree
+namespace Trees
 {
 	using namespace std;
 

@@ -1,15 +1,40 @@
 #include <iostream>
+#include <random>
 #include <Windows.h>
 #include "SJtree.h"
 #include "SJstack.h"
 #include "AVLtree.h"
+#include "RNDtree.h"
 
-using namespace AVLTree;
+using namespace Trees;
 
 int main()
 {
-	AVLtree<int, int> tree;
+	RNDtree<int, int> rnd_tree;
+	AVLtree<int, int> avl_tree;
+	
 	SJstack< pair<int, int> > stackk;
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	uniform_int_distribution<int> d{ -20'000,20'000 };
+
+	for (int i = 0; i < 20; i++)
+	{
+		avl_tree.clear();
+		rnd_tree.clear();
+		for (int j = 0; j < 500; j++)
+		{
+			int a = d(mt);
+			int b = a;
+			avl_tree.add(a, b);
+			rnd_tree.add(a, b);
+		}
+		//avl_tree.printPostOrder();
+		//rnd_tree.printPostOrder();
+		cout << avl_tree.getHeight() << " " << rnd_tree.getHeight() << "\n";
+	}
+
+	/*
 	int a = 0;
 	int b;
 	char c= '0';
@@ -27,12 +52,8 @@ int main()
 			tree.del(a);
 		}
 		tree.printInOrder();
-	}
-	//stackk.sPush(pair<int, int>(2, 29));
-	//cout << '\n';
-	//tree.buildFromStack(stackk);
-	
-	//stackk.sPush(pair<int, int>(1, 8));
+	}*/
+
 	system("pause");
 	return 0;
 }

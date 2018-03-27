@@ -5,39 +5,39 @@
 
 #include "SJstack.h" // my version of stack class
 
-namespace AVLTree
+namespace Trees
 {
 	using namespace std;
 
 	template <typename keyType, class dataType>
-	class SearchNode
+	class AVLNode
 	{
 	public:
 		keyType  key;  // standart type key so we can do operations between them like <,>,==
 		dataType data; // so any type data can be stored
-		SearchNode<keyType, dataType> *_left = nullptr;   // left sub-tree
-		SearchNode<keyType, dataType> *_right = nullptr;  // right sub-tree
+		AVLNode<keyType, dataType> *_left = nullptr;   // left sub-tree
+		AVLNode<keyType, dataType> *_right = nullptr;  // right sub-tree
 		unsigned char _height;
-		SearchNode() { key = keyType(); data = dataType(); }
+		AVLNode() { key = keyType(); data = dataType(); }
 
-		~SearchNode() { _left = nullptr; _right = nullptr; }
+		~AVLNode() { _left = nullptr; _right = nullptr; }
 
-		SearchNode(keyType key, dataType data)  // copy constructor
+		AVLNode(keyType key, dataType data)  // copy constructor
 		{
 			this->key = key;
 			this->data = data;
 			this->_height = 1;
 		}
 
-		SearchNode<keyType, dataType> operator = (const SearchNode<keyType, dataType> &searchNode2)
+		AVLNode<keyType, dataType> operator = (const AVLNode<keyType, dataType> &AVLNode2)
 		{
-			return (SearchNode<keyType, dataType>(this->key = searchNode2.key, this->data = searchNode2.data));
+			return (AVLNode<keyType, dataType>(this->key = AVLNode2.key, this->data = AVLNode2.data));
 		}
 	};
 
 
 #define sAVLTree    AVLtree<keyType, dataType>
-#define sNode    SearchNode<keyType, dataType>
+#define aNode    AVLNode<keyType, dataType>
 #define dataPair pair<keyType, dataType>
 
 	template <typename keyType, class dataType>
@@ -47,50 +47,50 @@ namespace AVLTree
 		AVLtree();
 		~AVLtree();
 
-		sNode* getRoot();
+		aNode* getRoot();
+		size_t getHeight();
 		void add(keyType addKey, dataType addElement);          // Interface to add element.
 		bool find(keyType searchKey, dataType &resultVariable); // Search first element with searchKey key, return 1 and change resultVariable if such element was found,
 																//return 0 and don't change resultVariable if such element doesn't exist.
-
-		void buildFromStack(SJstack<dataPair> &pairStack);      // Add new row of elements from stack to the tree.
 		void del(keyType deleteKey);                            // Delete closest to root element with deleteKey key.
+		void buildFromStack(SJstack<dataPair> &pairStack);      // Add new row of elements from stack to the tree.
 		void clear();                                           // Delete all nodes from tree.
+
 		void printPostOrder();                                  // Wrapper function for backend print.
 		void printInOrder();
 		void printPreOrder();
 
-
 	private:
 		//Data//
-		sNode * Root = nullptr;
+		aNode * Root = nullptr;
 
 		//Methods//
 
-		void recDelete(sNode *subTree);                                                       // recursive deletting all inheritor nodes, used as destructor
-		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack);                    // traverse tree in post-order and add each node into stack
-		void traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
-		void BE_printPostOrder(sNode *subTree);
-		void BE_printInOrder(sNode *subTree);
-		void BE_printPreOrder(sNode *subTree);
+		void recDelete(aNode *subTree);                                                       // recursive deletting all inheritor nodes, used as destructor
+		void traversePostOrder(aNode *subTree, SJstack<aNode> &treeStack);                    // traverse tree in post-order and add each node into stack
+		void traversePostOrder(aNode *subTree, SJstack<aNode> &treeStack, keyType deleteKey); // modification that won't include elements with set key into the stack
+		void BE_printPostOrder(aNode *subTree);
+		void BE_printInOrder(aNode *subTree);
+		void BE_printPreOrder(aNode *subTree);
 
-		sNode *leftMost(sNode *curNode);
-		sNode *rightMost(sNode *curNode);
+		aNode *leftMost(aNode *curNode);
+		aNode *rightMost(aNode *curNode);
 
-		sNode* rotateRight(sNode* subTree);                                    // Tree rotation to the right.
-		sNode* rotateLeft(sNode* subTree);                                     // Tree rotation to the left.
+		aNode* rotateRight(aNode* subTree);                                    // Tree rotation to the right.
+		aNode* rotateLeft(aNode* subTree);                                     // Tree rotation to the left.
 
-		sNode* recInsert(keyType addKey, dataType addElement, sNode *subTree); // recursive adding of element to the sub-tree by rule: go left 
+		aNode* recInsert(keyType addKey, dataType addElement, aNode *subTree); // recursive adding of element to the sub-tree by rule: go left 
 																			   //if key<=currentKey, otherwise go right
 
-		sNode* rightLeast(sNode* subTree);                                     // returns least node of right son's sub-tree
-		sNode* delLeast(sNode* subTree);
+		aNode* rightLeast(aNode* subTree);                                     // returns least node of right son's sub-tree
+		aNode* delLeast(aNode* subTree);
 
-		sNode* recDelete(sNode* subNode, keyType val);                         // deletes element with deleteKey could be found from chosen node
+		aNode* recDelete(aNode* subTree, keyType val);                         // deletes element with deleteKey could be found from chosen node
 		
-		unsigned char height(sNode* subNode);
-		int bFactor(sNode* subNode);                                           // diff between right and left son's heights
-		void fixHeight(sNode* subNode);
-		sNode* balance(sNode* subNode);
+		unsigned char height(aNode* subTree);
+		int bFactor(aNode* subTree);                                           // diff between right and left son's heights
+		void normalizeHeight(aNode* subTree);
+		aNode* balance(aNode* subTree);
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,9 +107,17 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::getRoot()
+	inline aNode * AVLtree<keyType, dataType>::getRoot()
 	{
 		return this->Root;
+	}
+
+	template<typename keyType, class dataType>
+	inline size_t AVLtree<keyType, dataType>::getHeight()
+	{
+		if (this->Root == nullptr)
+			return 0;
+		return this->Root->_height;
 	}
 
 	template <typename keyType, class dataType>
@@ -119,12 +127,13 @@ namespace AVLTree
 	}
 
 	template <typename keyType, class dataType>
-	void AVLtree<keyType, dataType>::recDelete(sNode *subTree)
+	void AVLtree<keyType, dataType>::recDelete(aNode *subTree)
 	{
 		if (subTree != nullptr)
 		{
 			recDelete(subTree->_left);
 			recDelete(subTree->_right);
+			balance(subTree);
 			delete subTree;
 		}
 	}
@@ -135,7 +144,7 @@ namespace AVLTree
 		if (this->Root == nullptr) // stop if empty
 			return 0;
 
-		sNode *pCurNode = this->Root;
+		aNode *pCurNode = this->Root;
 		while (searchKey != pCurNode->key && (pCurNode->_left != nullptr || pCurNode->_right != nullptr))
 		{
 			if (searchKey < pCurNode->key)
@@ -188,7 +197,7 @@ namespace AVLTree
 	}
 
 	template <typename keyType, class dataType>
-	void AVLtree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack)
+	void AVLtree<keyType, dataType>::traversePostOrder(aNode *subTree, SJstack<aNode> &treeStack)
 	{
 		if (subTree != nullptr)
 		{
@@ -201,7 +210,7 @@ namespace AVLTree
 	}
 
 	template <typename keyType, class dataType>
-	void AVLtree<keyType, dataType>::traversePostOrder(sNode *subTree, SJstack<sNode> &treeStack, keyType deleteKey)
+	void AVLtree<keyType, dataType>::traversePostOrder(aNode *subTree, SJstack<aNode> &treeStack, keyType deleteKey)
 	{
 		if (subTree != nullptr)
 		{
@@ -215,7 +224,7 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline void AVLtree<keyType, dataType>::BE_printPostOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printPostOrder(aNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -228,7 +237,7 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline void AVLtree<keyType, dataType>::BE_printInOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printInOrder(aNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -241,7 +250,7 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline void AVLtree<keyType, dataType>::BE_printPreOrder(sNode * subTree)
+	inline void AVLtree<keyType, dataType>::BE_printPreOrder(aNode * subTree)
 	{
 		if (subTree != nullptr)
 		{
@@ -258,10 +267,11 @@ namespace AVLTree
 	void AVLtree<keyType, dataType>::clear()
 	{
 		recDelete(this->Root);
+		this->Root = nullptr;
 	}
 
 	template<typename keyType, class dataType>
-	sNode* AVLtree<keyType, dataType>::rotateRight(sNode* subTree)
+	aNode* AVLtree<keyType, dataType>::rotateRight(aNode* subTree)
 	{
 		if (subTree == nullptr)
 			return nullptr;
@@ -270,20 +280,21 @@ namespace AVLTree
 			//if (subTree->_left == nullptr)
 				//return nullptr;
 
-			sNode* newRoot = subTree->_left;
+			aNode* newRoot = subTree->_left; // new sub-tree root
 
 			subTree->_left = newRoot->_right;
 
 			newRoot->_right = subTree;
 
-			fixHeight(newRoot);
+			normalizeHeight(subTree);
+			normalizeHeight(newRoot);
 
 			return newRoot;
 		}
 	}
 
 	template<typename keyType, class dataType>
-	sNode* AVLtree<keyType, dataType>::rotateLeft(sNode* subTree)
+	aNode* AVLtree<keyType, dataType>::rotateLeft(aNode* subTree)
 	{
 		if (subTree == nullptr)
 			return nullptr;
@@ -292,24 +303,24 @@ namespace AVLTree
 			//if (subTree->_right == nullptr)
 				//return nullptr;
 
-			sNode* newRoot = subTree->_right;
+			aNode* newRoot = subTree->_right;
 
 			subTree->_right = newRoot->_left;
 
 			newRoot->_left = subTree;
 
-			fixHeight(subTree);
-			fixHeight(newRoot);
+			normalizeHeight(subTree);
+			normalizeHeight(newRoot);
 
 			return newRoot;
 		}
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::recInsert(keyType addKey, dataType addElement, sNode * subTree)
+	inline aNode * AVLtree<keyType, dataType>::recInsert(keyType addKey, dataType addElement, aNode * subTree)
 	{
 		if (subTree == nullptr) 
-			return new sNode(addKey, addElement);
+			return new aNode(addKey, addElement);
 
 		if (addKey < subTree->key)
 			subTree->_left = recInsert(addKey, addElement, subTree->_left);
@@ -319,7 +330,7 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::rightLeast(sNode * subTree)
+	inline aNode * AVLtree<keyType, dataType>::rightLeast(aNode * subTree)
 	{
 		if (subTree->_left == nullptr)
 			return subTree;
@@ -328,7 +339,7 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::delLeast(sNode * subTree)
+	inline aNode * AVLtree<keyType, dataType>::delLeast(aNode * subTree)
 	{
 		if (subTree->_left == nullptr)
 			return subTree->_right;
@@ -337,75 +348,79 @@ namespace AVLTree
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::recDelete(sNode * subNode, keyType val)
+	inline aNode * AVLtree<keyType, dataType>::recDelete(aNode * subTree, keyType val)
 	{
-		if (subNode == nullptr)
+		if (subTree == nullptr)
 			return nullptr;
-		if (val < subNode->key)
-			subNode->_left = recDelete(subNode->_left, val);
-		else if (val > subNode->key)
-			subNode->_right = recDelete(subNode->_right, val);
+		if (val < subTree->key)
+			subTree->_left = recDelete(subTree->_left, val);
+		else if (val > subTree->key)
+			subTree->_right = recDelete(subTree->_right, val);
 
 		else //  found
 		{
-			sNode* leftSon = subNode->_left;
-			sNode* rightSon = subNode->_right;
-			delete subNode;
+			aNode* leftSon = subTree->_left;
+			aNode* rightSon = subTree->_right;
+			delete subTree;
 			if (rightSon == nullptr) 
 				return leftSon;
-			sNode* min_ = rightLeast(rightSon);
+			aNode* min_ = rightLeast(rightSon);
 			min_->_right = delLeast(rightSon);
 			min_->_left = leftSon;
 			return balance(min_);
 		}
 
-		return balance(subNode);
+		return balance(subTree);
 	}
 
 	template<typename keyType, class dataType>
-	inline unsigned char AVLtree<keyType, dataType>::height(sNode * subNode)
+	unsigned char AVLtree<keyType, dataType>::height(aNode * subTree)
 	{
-		if (subNode != nullptr)
-			return subNode->_height;
+		if (subTree != nullptr)
+			return subTree->_height;
 		else
 			return 0;
 	}
 
 	template<typename keyType, class dataType>
-	inline int AVLtree<keyType, dataType>::bFactor(sNode * subNode)
+	inline int AVLtree<keyType, dataType>::bFactor(aNode * subTree)
 	{
-		return (height(subNode->_right) - height(subNode->_left));
+		return (height(subTree->_right) - height(subTree->_left));
 	}
 
 	template<typename keyType, class dataType>
-	inline void AVLtree<keyType, dataType>::fixHeight(sNode * subNode)
+	inline void AVLtree<keyType, dataType>::normalizeHeight(aNode * subTree)
 	{
-		unsigned char hleft = height(subNode->_left);
-		unsigned char hright = height(subNode->_right);
+		unsigned char hleft = 0;
+		unsigned char hright = 0;
+		if (subTree->_left != nullptr)
+			hleft = height(subTree->_left);
+		if (subTree->_right != nullptr)
+			hright = height(subTree->_right);
 
 		if (hleft > hright)
-			subNode->_height = hleft + 1;
+			subTree->_height = hleft + 1;
 		else
-			subNode->_height = hright + 1;
+			subTree->_height = hright + 1;
 	}
 
 	template<typename keyType, class dataType>
-	inline sNode * AVLtree<keyType, dataType>::balance(sNode * subNode)
+	inline aNode * AVLtree<keyType, dataType>::balance(aNode * subTree)
 	{
-		fixHeight(subNode);
-		if (bFactor(subNode) == 2)
+		normalizeHeight(subTree);
+		if (bFactor(subTree) == 2)
 		{
-			if (bFactor(subNode->_right) < 0)
-				subNode->_right = rotateRight(subNode->_right);
-			return rotateLeft(subNode);
+			if (bFactor(subTree->_right) < 0)
+				subTree->_right = rotateRight(subTree->_right); // double
+			return rotateLeft(subTree);                         // single
 		}
-		if (bFactor(subNode) == -2)
+		if (bFactor(subTree) == -2)
 		{
-			if (bFactor(subNode->_left) > 0)
-				subNode->_left = rotateLeft(subNode->_left);
-			return rotateRight(subNode);
+			if (bFactor(subTree->_left) > 0)
+				subTree->_left = rotateLeft(subTree->_left);   // double
+			return rotateRight(subTree);                       // single
 		}
-		return subNode;
+		return subTree;
 	}
 
 	template<typename keyType, class dataType>
@@ -430,7 +445,7 @@ namespace AVLTree
 	}
 
 	template <typename keyType, class dataType>
-	sNode * AVLtree<keyType, dataType>::leftMost(sNode *curNode)
+	aNode * AVLtree<keyType, dataType>::leftMost(aNode *curNode)
 	{
 		if (curNode == nullptr)
 			return nullptr;
@@ -441,7 +456,7 @@ namespace AVLTree
 	}
 
 	template <typename keyType, class dataType>
-	sNode * AVLtree<keyType, dataType>::rightMost(sNode *curNode)
+	aNode * AVLtree<keyType, dataType>::rightMost(aNode *curNode)
 	{
 		if (curNode == nullptr)
 			return nullptr;
